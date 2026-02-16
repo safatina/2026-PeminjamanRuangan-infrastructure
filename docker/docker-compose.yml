@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: peminjaman-db
+    environment:
+      SA_PASSWORD: "Password123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - db_data:/var/opt/mssql
+    networks:
+      - peminjaman-net
+
+  backend:
+    build:
+      context: ../../2026-PeminjamanRuangan-backend
+      dockerfile: ../2026-PeminjamanRuangan-infrastructure/docker/backend.Dockerfile
+    container_name: peminjaman-backend
+    depends_on:
+      - db
+    ports:
+      - "5112:8080"
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=peminjaman-db;Database=PeminjamanRuanganDB;User Id=sa;Password=Password123!;TrustServerCertificate=True"
+    networks:
+      - peminjaman-net
+
+  frontend:
+    build:
+      context: ../../2026-PeminjamanRuangan-frontend
+      dockerfile: ../2026-PeminjamanRuangan-infrastructure/docker/frontend.Dockerfile
+    container_name: peminjaman-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5174:80"
+    networks:
+      - peminjaman-net
+
+volumes:
+  db_data:
+
+networks:
+  peminjaman-net:
